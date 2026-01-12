@@ -61,7 +61,6 @@ try
         MaxDelay = TimeSpan.FromMilliseconds(250)
     };
     services
-        // TODO: get base address from config
         .AddHttpClient<OrderClient>(client =>
         {
             client.BaseAddress = new Uri(configuration.GetValue<string>("ApiClients:Order:BaseAddress")!);
@@ -72,7 +71,6 @@ try
             pipeline => pipeline.AddRetry(retryStrategyOptions).AddTimeout(TimeSpan.FromSeconds(5)));
 
     services
-        // TODO: get base address from config
         .AddHttpClient<LoyaltyClient>(client =>
         {
             client.BaseAddress = new Uri(configuration.GetValue<string>("ApiClients:Loyalty:BaseAddress")!);
