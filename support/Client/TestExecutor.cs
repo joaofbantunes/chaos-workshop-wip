@@ -29,8 +29,10 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
         try
         {
-            await RunTestsAsync(TestBatteryDefinition.Get(battery), ct);
-            AnsiConsole.MarkupLine("Test execution completed");
+            var allTestsPassed = await RunTestsAsync(TestBatteryDefinition.Get(battery), ct);
+            AnsiConsole.MarkupLine(allTestsPassed
+                ? ":trophy: [green]All tests passed[/]"
+                : ":cross_mark: [red]Some tests failed[/]");
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -59,10 +61,11 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             });
     }
 
-    private async Task RunTestsAsync(IEnumerable<TestDefinition> tests, CancellationToken ct)
+    private async Task<bool> RunTestsAsync(IEnumerable<TestDefinition> tests, CancellationToken ct)
     {
         using var activity = StartActivity("run tests", ActivityKind.Internal);
 
+        var allTestsPassed = true;
         foreach (var (test, index) in tests.Select((value, index) => (value, index)))
         {
             AnsiConsole.Write(new Rule($"Running test {index + 1}")
@@ -72,7 +75,9 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             });
             AnsiConsole.MarkupLine($":alien_monster: [blue]{test.Description}[/]");
             var startTimestamp = timeProvider.GetTimestamp();
-            if (await RunTestAsync(test, index, ct))
+            var testPassed = await RunTestAsync(test, index, ct);
+            allTestsPassed = allTestsPassed && testPassed;
+            if (testPassed)
             {
                 AnsiConsole.Write(
                     new Rule($":check_mark_button: Test {index + 1} passed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
@@ -91,6 +96,8 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
                     });
             }
         }
+
+        return allTestsPassed;
 
         static string GetElapsedTimeString(TimeProvider timeProvider, long startTimestamp)
         {
