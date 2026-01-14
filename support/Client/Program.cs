@@ -54,7 +54,7 @@ try
                 }));
             return ValueTask.CompletedTask;
         },
-        MaxRetryAttempts = 30,
+        MaxRetryAttempts = 100,
         // constant and fast retry delay, so the things run faster in a workshop setting
         BackoffType = DelayBackoffType.Constant,
         Delay = TimeSpan.FromMilliseconds(250),

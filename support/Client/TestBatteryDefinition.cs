@@ -18,6 +18,7 @@ public static class TestBatteryDefinition
     [
         new()
         {
+            Description = "Customer 1 places first order: 2 burgers and 1 fries, no discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer1,
@@ -44,6 +45,7 @@ public static class TestBatteryDefinition
         },
         new()
         {
+            Description = "Customer 1 places second order: 1 coke and 2 fries, 1% discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer1,
@@ -69,6 +71,7 @@ public static class TestBatteryDefinition
         },
         new()
         {
+            Description = "Customer 2 places first order: 2 cokes and 1 fries, no discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer2,
@@ -95,6 +98,7 @@ public static class TestBatteryDefinition
         },
         new()
         {
+            Description = "Customer 2 places second order: 2 burgers and 2 fries, 1% discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer2,
@@ -121,6 +125,7 @@ public static class TestBatteryDefinition
         },
         new()
         {
+            Description =  "Customer 2 places third order: 2 fries, 2% discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer2,
@@ -146,6 +151,7 @@ public static class TestBatteryDefinition
         },
         new()
         {
+            Description = "Customer 3 places first order: 2 fries, no discount",
             PlaceOrderRequest = new()
             {
                 CustomerId = Customer3,
@@ -174,6 +180,7 @@ public static class TestBatteryDefinition
 
 public sealed record TestDefinition
 {
+    public required string Description { get; init; }
     public required PlaceOrderRequest PlaceOrderRequest { get; init; }
     public required ExpectedPlacedOrderDetails ExpectedPlacedOrderDetails { get; init; }
     public required int ExpectedCustomerOrdersCount { get; init; }

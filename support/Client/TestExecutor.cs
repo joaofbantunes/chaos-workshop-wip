@@ -30,19 +30,19 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
         try
         {
             await RunTestsAsync(TestBatteryDefinition.Get(battery), ct);
-            AnsiConsole.WriteLine("Test execution completed");
+            AnsiConsole.MarkupLine("Test execution completed");
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            AnsiConsole.WriteLine("⚠️ Test execution cancelled");
+            AnsiConsole.MarkupLine("[yellow]:warning:[/] Test execution cancelled");
         }
         catch (HttpRequestException)
         {
-            AnsiConsole.WriteLine("❌ Too many failed requests, aborting test execution");
+            AnsiConsole.MarkupLine(":cross_mark: Too many failed requests, aborting test execution");
         }
         catch (Exception e)
         {
-            AnsiConsole.WriteLine($"❌ Unexpected test execution error: {e.Message}");
+            AnsiConsole.MarkupLine($":cross_mark: Unexpected test execution error: {e.Message}");
         }
     }
 
@@ -70,11 +70,12 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
                 Justification = Justify.Left,
                 Style = new Style(foreground: Color.Blue)
             });
+            AnsiConsole.MarkupLine($":alien_monster: [blue]{test.Description}[/]");
             var startTimestamp = timeProvider.GetTimestamp();
             if (await RunTestAsync(test, index, ct))
             {
                 AnsiConsole.Write(
-                    new Rule($"✅ Test {index + 1} passed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
+                    new Rule($":check_mark_button: Test {index + 1} passed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
                     {
                         Justification = Justify.Left,
                         Style = new Style(foreground: Color.Green)
@@ -83,7 +84,7 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             else
             {
                 AnsiConsole.Write(
-                    new Rule($"❌ Test {index + 1} failed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
+                    new Rule($":cross_mark: Test {index + 1} failed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
                     {
                         Justification = Justify.Left,
                         Style = new Style(foreground: Color.Red)
@@ -127,7 +128,7 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             }
             catch (HttpRequestException)
             {
-                AnsiConsole.WriteLine("❌ Too many failed requests, aborting test execution");
+                AnsiConsole.MarkupLine(":cross_mark: Too many failed requests, aborting test execution");
                 return false;
             }
         }
@@ -136,11 +137,11 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
         {
             if (orderId != Guid.Empty)
             {
-                AnsiConsole.WriteLine($"✅ Order placed with id: {orderId}");
+                AnsiConsole.MarkupLine($":check_mark_button: Order placed with id: {orderId}");
             }
             else
             {
-                AnsiConsole.WriteLine("❌ Order placement failed");
+                AnsiConsole.MarkupLine(":cross_mark: Order placement failed");
                 return false;
             }
 
@@ -156,11 +157,11 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
             if (placedOrder != null)
             {
-                AnsiConsole.WriteLine("✅ Order found in list with id");
+                AnsiConsole.MarkupLine(":check_mark_button: Order found in list with id");
             }
             else
             {
-                AnsiConsole.WriteLine("❌ Order not found in list");
+                AnsiConsole.MarkupLine(":cross_mark: Order not found in list");
                 return false;
             }
 
@@ -168,36 +169,36 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
             if (placedOrder.DiscountPercentage == test.ExpectedPlacedOrderDetails.DiscountPercentage)
             {
-                AnsiConsole.WriteLine($"✅ Discount percentage is correct ({placedOrder.DiscountPercentage})");
+                AnsiConsole.MarkupLine($":check_mark_button: Discount percentage is correct ({placedOrder.DiscountPercentage})");
             }
             else
             {
                 areOrderDetailsCorrect = false;
-                AnsiConsole.WriteLine(
-                    $"❌ Discount percentage is incorrect (expected {test.ExpectedPlacedOrderDetails.DiscountPercentage}, got {placedOrder.DiscountPercentage})");
+                AnsiConsole.MarkupLine(
+                    $":cross_mark: Discount percentage is incorrect (expected {test.ExpectedPlacedOrderDetails.DiscountPercentage}, got {placedOrder.DiscountPercentage})");
             }
 
             if (placedOrder.Amount == test.ExpectedPlacedOrderDetails.Amount)
             {
-                AnsiConsole.WriteLine($"✅ Amount is correct ({placedOrder.Amount})");
+                AnsiConsole.MarkupLine($":check_mark_button: Amount is correct ({placedOrder.Amount})");
             }
             else
             {
                 areOrderDetailsCorrect = false;
-                AnsiConsole.WriteLine(
-                    $"❌ Amount is incorrect (expected {test.ExpectedPlacedOrderDetails.Amount}, got {placedOrder.Amount})");
+                AnsiConsole.MarkupLine(
+                    $":cross_mark: Amount is incorrect (expected {test.ExpectedPlacedOrderDetails.Amount}, got {placedOrder.Amount})");
             }
 
             if (!areOrderDetailsCorrect) return false;
 
             if (orders.Count == test.ExpectedCustomerOrdersCount)
             {
-                AnsiConsole.WriteLine($"✅ Customer orders count is correct ({orders.Count})");
+                AnsiConsole.MarkupLine($":check_mark_button: Customer orders count is correct ({orders.Count})");
             }
             else
             {
-                AnsiConsole.WriteLine(
-                    $"❌ Customer orders count is incorrect (expected {test.ExpectedCustomerOrdersCount}, got {orders.Count})");
+                AnsiConsole.MarkupLine(
+                    $":cross_mark: Customer orders count is incorrect (expected {test.ExpectedCustomerOrdersCount}, got {orders.Count})");
                 return false;
             }
 
@@ -211,13 +212,13 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
             if (nextLoyaltyDiscount.DiscountPercentage == test.ExpectedGetCustomerDiscountResponse.DiscountPercentage)
             {
-                AnsiConsole.WriteLine(
-                    $"✅ Loyalty discount percentage is correct ({nextLoyaltyDiscount.DiscountPercentage})");
+                AnsiConsole.MarkupLine(
+                    $":check_mark_button: Loyalty discount percentage is correct ({nextLoyaltyDiscount.DiscountPercentage})");
             }
             else
             {
-                AnsiConsole.WriteLine(
-                    $"❌ Loyalty discount percentage is incorrect (expected {test.ExpectedGetCustomerDiscountResponse.DiscountPercentage}, got {nextLoyaltyDiscount.DiscountPercentage})");
+                AnsiConsole.MarkupLine(
+                    $":cross_mark: Loyalty discount percentage is incorrect (expected {test.ExpectedGetCustomerDiscountResponse.DiscountPercentage}, got {nextLoyaltyDiscount.DiscountPercentage})");
                 return false;
             }
         }
