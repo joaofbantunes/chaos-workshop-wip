@@ -76,7 +76,7 @@ public sealed class ChaosTransformFactory : ITransformFactory
         {
             context.AddRequestTransform(async ctx =>
             {
-                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested)
+                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested && !ctx.HttpContext.IsStandDownRequested())
                 {
                     var delay = CalculateRandomDelay(latencyBeforeRequest.Value);
                     ObserveDelay("chaos - apply latency before request", delay);
@@ -89,7 +89,7 @@ public sealed class ChaosTransformFactory : ITransformFactory
         {
             context.AddRequestTransform(ctx =>
             {
-                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested)
+                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested && !ctx.HttpContext.IsStandDownRequested())
                 {
                     var (shouldFail, typeOfFailure) = CalculateFailure(failurePercentBeforeRequest.Value);
 
@@ -109,7 +109,7 @@ public sealed class ChaosTransformFactory : ITransformFactory
         {
             context.AddResponseTransform(ctx =>
             {
-                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested)
+                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested && !ctx.HttpContext.IsStandDownRequested())
                 {
                     var (shouldFail, typeOfFailure) = CalculateFailure(failurePercentAfterResponse.Value);
 
@@ -129,7 +129,7 @@ public sealed class ChaosTransformFactory : ITransformFactory
         {
             context.AddResponseTransform(async ctx =>
             {
-                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested)
+                if (!ctx.HttpContext.RequestAborted.IsCancellationRequested && !ctx.HttpContext.IsStandDownRequested())
                 {
                     var delay = CalculateRandomDelay(latencyAfterResponse.Value);
                     ObserveDelay("chaos - apply latency after response", delay);

@@ -26,7 +26,10 @@ public sealed class OrderClient(HttpClient client)
 
     public async Task<IReadOnlyList<OrderDto>> ListOrdersAsync(Guid? customerId, CancellationToken ct)
     {
-        var response = await client.GetAsync($"orders?customerId={customerId}", ct);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"orders?customerId={customerId}");
+        // disable chaos for validation requests, to minimize noise
+        request.Headers.Add("Workshop-ChaosProxy-StandDown", "true");
+        var response = await client.SendAsync(request, ct);
 
         response.EnsureSuccessStatusCode();
 
@@ -38,7 +41,10 @@ public sealed class OrderClient(HttpClient client)
 
     public async Task ResetDbAsync(CancellationToken ct)
     {
-        var response = await client.PostAsync("assertions/reset-db", null, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "assertions/reset-db");
+        request.Headers.Add("Workshop-ChaosProxy-StandDown", "true");
+        // disable chaos for validation requests, to minimize noise
+        var response = await client.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
     }
 }

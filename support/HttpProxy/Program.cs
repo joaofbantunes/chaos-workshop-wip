@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ChaosWorkshop.HttpProxy.Features.Chaos;
 using ChaosWorkshop.HttpProxy.Features.Shared.Observability;
 
@@ -14,6 +15,11 @@ builder.Services.AddReverseProxy()
 
 var app = builder.Build();
 
+app.Use((ctx, next) =>
+{
+    Activity.Current?.AddTag("is_stand_down_requested", ctx.IsStandDownRequested());
+    return next();
+});
 app.MapReverseProxy();
 
 app.MapGet("/", () => "Hello World!");

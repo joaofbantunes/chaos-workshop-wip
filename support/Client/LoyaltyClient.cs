@@ -7,7 +7,10 @@ public sealed class LoyaltyClient(HttpClient client)
 {
     public async Task<GetCustomerDiscountResponse> GetDiscountAsync(Guid customerId, CancellationToken ct)
     {
-        var response = await client.GetAsync($"customer-discounts/{customerId}", ct);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"customer-discounts/{customerId}");
+        // disable chaos for validation requests, to minimize noise
+        request.Headers.Add("Workshop-ChaosProxy-StandDown", "true");
+        var response = await client.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<GetCustomerDiscountResponse>(
                    LoyaltySerializerContext.Default.GetCustomerDiscountResponse,
@@ -17,7 +20,10 @@ public sealed class LoyaltyClient(HttpClient client)
 
     public async Task ResetDbAsync(CancellationToken ct)
     {
-        var response = await client.PostAsync("assertions/reset-db", null, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "assertions/reset-db");
+        request.Headers.Add("Workshop-ChaosProxy-StandDown", "true");
+        // disable chaos for validation requests, to minimize noise
+        var response = await client.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
     }
 }
