@@ -113,8 +113,9 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
         if (activity is not null)
         {
-            AnsiConsole.MarkupLine(
-                $"[orange1]The trace id for this run is: [bold]{activity.TraceId}[/][/]");
+            AnsiConsole.MarkupLine($"[orange1]The trace id for this run is: [bold]{activity.TraceId}[/][/]");
+            var rawParameter = $$"""{"datasource":"tempo","queries":[{"query":"{{activity.TraceId}}"}]}""";
+            AnsiConsole.MarkupLine($":link: [orange1]Link to Grafana > [/]http://localhost:3000/explore?left={Uri.EscapeDataString(rawParameter)}");
         }
 
         Guid orderId;
@@ -159,11 +160,11 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
             if (placedOrder != null)
             {
-                AnsiConsole.MarkupLine(":check_mark_button: Order found in list with id");
+                AnsiConsole.MarkupLine(":check_mark_button: Order found");
             }
             else
             {
-                AnsiConsole.MarkupLine(":cross_mark: Order not found in list");
+                AnsiConsole.MarkupLine(":cross_mark: Order not found");
                 return false;
             }
 
