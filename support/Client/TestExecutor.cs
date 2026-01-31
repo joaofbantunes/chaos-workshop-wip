@@ -14,17 +14,6 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 {
     public async Task ExecuteAsync(TestBattery battery, CancellationToken ct)
     {
-        using var activity = StartActivity(
-            "execute test battery",
-            ActivityKind.Internal,
-            tags:
-            [
-                new("test.battery", battery.ToString())
-            ]);
-
-        AnsiConsole.MarkupLine(
-            $"[orange1]If you want to check Grafana, the trace id for this run is: [bold]{activity?.TraceId}[/][/]");
-
         await ResetServicesAsync(ct);
 
         try
@@ -63,8 +52,6 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
     private async Task<bool> RunTestsAsync(IEnumerable<TestDefinition> tests, CancellationToken ct)
     {
-        using var activity = StartActivity("run tests", ActivityKind.Internal);
-
         var allTestsPassed = true;
         foreach (var (test, index) in tests.Select((value, index) => (value, index)))
         {
@@ -80,7 +67,8 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             if (testPassed)
             {
                 AnsiConsole.Write(
-                    new Rule($":check_mark_button: Test {index + 1} passed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
+                    new Rule(
+                        $":check_mark_button: Test {index + 1} passed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
                     {
                         Justification = Justify.Left,
                         Style = new Style(foreground: Color.Green)
@@ -89,7 +77,8 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
             else
             {
                 AnsiConsole.Write(
-                    new Rule($":cross_mark: Test {index + 1} failed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
+                    new Rule(
+                        $":cross_mark: Test {index + 1} failed (took {GetElapsedTimeString(timeProvider, startTimestamp)})")
                     {
                         Justification = Justify.Left,
                         Style = new Style(foreground: Color.Red)
@@ -115,12 +104,18 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
     private async Task<bool> RunTestAsync(TestDefinition test, int index, CancellationToken ct)
     {
         using var activity = StartActivity(
-            "run test",
+            $"run test {index + 1}",
             ActivityKind.Internal,
             tags:
             [
                 new("test.index", index)
             ]);
+
+        if (activity is not null)
+        {
+            AnsiConsole.MarkupLine(
+                $"[orange1]The trace id for this run is: [bold]{activity.TraceId}[/][/]");
+        }
 
         Guid orderId;
 
@@ -176,7 +171,8 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
             if (placedOrder.DiscountPercentage == test.ExpectedPlacedOrderDetails.DiscountPercentage)
             {
-                AnsiConsole.MarkupLine($":check_mark_button: Discount percentage is correct ({placedOrder.DiscountPercentage})");
+                AnsiConsole.MarkupLine(
+                    $":check_mark_button: Discount percentage is correct ({placedOrder.DiscountPercentage})");
             }
             else
             {
