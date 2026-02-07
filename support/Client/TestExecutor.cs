@@ -103,40 +103,46 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
 
     private async Task<bool> RunTestAsync(TestDefinition test, int index, CancellationToken ct)
     {
-        using var activity = StartActivity(
-            $"run test {index + 1}",
-            ActivityKind.Internal,
-            tags:
-            [
-                new("test.index", index)
-            ]);
-
-        if (activity is not null)
-        {
-            AnsiConsole.MarkupLine($"[orange1]The trace id for this run is: [bold]{activity.TraceId}[/][/]");
-            var rawParameter = $$"""{"datasource":"tempo","queries":[{"query":"{{activity.TraceId}}"}]}""";
-            AnsiConsole.MarkupLine($":link: [orange1]Link to Grafana > [/]http://localhost:3000/explore?left={Uri.EscapeDataString(rawParameter)}");
-        }
-
         Guid orderId;
-
-        using (var _ = StartActivity("place order", ActivityKind.Internal))
+        using (var activity = StartActivity(
+                   $"run test {index + 1}",
+                   ActivityKind.Internal,
+                   tags:
+                   [
+                       new("test.index", index)
+                   ]))
         {
-            try
+            if (activity is not null)
             {
-                var result = await AnsiConsole.Status().StartAsync(
-                    "Placing order...",
-                    _ => orderClient.PlaceOrderAsync(test.PlaceOrderRequest, ct));
-                orderId = result.OrderId;
+                AnsiConsole.MarkupLine($"[orange1]The trace id for this run is: [bold]{activity.TraceId}[/][/]");
+                var rawParameter = $$"""{"datasource":"tempo","queries":[{"query":"{{activity.TraceId}}"}]}""";
+                AnsiConsole.MarkupLine(
+                    $":link: [orange1]Link to Grafana > [/]http://localhost:3000/explore?left={Uri.EscapeDataString(rawParameter)}");
             }
-            catch (HttpRequestException)
+
+            using (var _ = StartActivity("place order", ActivityKind.Internal))
             {
-                AnsiConsole.MarkupLine(":cross_mark: Too many failed requests, aborting test execution");
-                return false;
+                try
+                {
+                    var result = await AnsiConsole.Status().StartAsync(
+                        "Placing order...",
+                        _ => orderClient.PlaceOrderAsync(test.PlaceOrderRequest, ct));
+                    orderId = result.OrderId;
+                }
+                catch (HttpRequestException)
+                {
+                    AnsiConsole.MarkupLine(":cross_mark: Too many failed requests, aborting test execution");
+                    return false;
+                }
             }
         }
 
-        using (var _ = StartActivity("assert outcome", ActivityKind.Internal))
+        using (var _ = StartActivity(
+                   $"assert outcome for test {index + 1}",
+                   ActivityKind.Internal, tags:
+                   [
+                       new("test.index", index)
+                   ]))
         {
             if (orderId != Guid.Empty)
             {
