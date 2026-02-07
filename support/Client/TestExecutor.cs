@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Polly;
+using Polly.Retry;
 using Spectre.Console;
 
 namespace ChaosWorkshop.Client;
@@ -212,12 +214,29 @@ public sealed class TestExecutor(OrderClient orderClient, LoyaltyClient loyaltyC
                 return false;
             }
 
+            // we'll retry a bit if the outcome isn't the expected one, in case the participant takes an approach that leverages eventual consistency
+            var nextDiscountAssertResiliencePipeline = new ResiliencePipelineBuilder<GetCustomerDiscountResponse>()
+                .AddRetry(new()
+                    {
+                        MaxRetryAttempts = 10,
+                        Delay = TimeSpan.FromSeconds(3),
+                        BackoffType = DelayBackoffType.Constant,
+                        ShouldHandle = args =>
+                            ValueTask.FromResult(
+                                args.Outcome.Result!.DiscountPercentage
+                                != test.ExpectedGetCustomerDiscountResponse.DiscountPercentage)
+                    }
+                ).Build();
+
             var nextLoyaltyDiscount = await AnsiConsole.Status().StartAsync(
                 "Fetching loyalty discount...",
-                _ =>
+                async _ =>
                 {
                     using var loyaltyDiscountActivity = StartActivity("get customer discount", ActivityKind.Internal);
-                    return loyaltyClient.GetDiscountAsync(test.GetCustomerDiscountRequest.CustomerId, ct);
+                    return await nextDiscountAssertResiliencePipeline.ExecuteAsync(
+                        async innerCt =>
+                            await loyaltyClient.GetDiscountAsync(test.GetCustomerDiscountRequest.CustomerId, innerCt),
+                        ct);
                 });
 
             if (nextLoyaltyDiscount.DiscountPercentage == test.ExpectedGetCustomerDiscountResponse.DiscountPercentage)
