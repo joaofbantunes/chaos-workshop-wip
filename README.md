@@ -69,8 +69,10 @@ Getting the system up and running is a matter of executing `make run-all`. If `m
 
 To view the system in action, you should use the client application, in the `support/Client` folder. You can run it from there, with `dotnet run` (eventually a compiled binary might be provided). The client allows you to select a test battery, which will place multiple orders, then asserting everything worked out as expected.
 
-While unrealistic, the client will keep retrying until it gets a successful response from the Order Service API, so you can focus on making the system resilient. Don't forget though, that in a real-world scenario, you would need to consider that clients eventually give up.
+While unrealistic, the client will retry up to 100 times, trying to get a successful response from the Order Service API, so you can focus on making the system resilient. Don't forget though, that in a real-world scenario, you would need to consider that clients eventually give up.
 
 To help you understand what happens every time an order is placed, you can use Grafana (and the LGTM stack) which is included in the setup. You can access Grafana at `http://localhost:3000`. You'll see trace ids corresponding to what is being executed by the client, printed out in the console, so you can then look them up in Grafana. I'd also consider this part of the exercise, as observability is a key aspect of troubleshooting and understanding system behavior. Note that there are multiple options when it comes to observability, just went with LGTM
 
 Assuming time allowed it, and you were able to implement some strategies to make the Order Service more resilient, you can re-run the client application, and observe how the system behaves now. If you run the full test battery some times, and everything works out fine, it probably means you were successful in making the Order Service resilient to the various issues introduced for the exercise.
+
+To make the exercise less boring, the timings are sped up, so take that into consideration when implementing your strategies. For example, the client application timeout is set to 5 seconds.
